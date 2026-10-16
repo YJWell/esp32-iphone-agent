@@ -45,6 +45,15 @@ iPhone ──屏幕镜像（Wi-Fi）──▶ ESP32-S3：AirPlay 接收端 ─�
 
 ## 硬件
 
+### 可选：电脑控制 C3 / S3
+
+此个人 fork 新增 **电脑 -> USB 串口 -> ESP32-C3 或 ESP32-S3 -> 蓝牙 HID -> iPhone** 模式。
+两种板子共用固件源码与鼠标、键盘命令，不需要 Wi-Fi 或 PSRAM。
+构建、配对、Windows JSON 命令行及 Python `Phone`/Agent 接入见
+[串口 / 蓝牙说明（英文）](hardware/serial_ble/README.md)。
+这与下文的纯手机模式不同，原有 `hardware/hid_bridge` 和 `ios/` 不变。
+Windows 目前仅支持输入命令行；尚未提供可工作的屏幕采集 / Agent 闭环。
+
 | 部件 | 说明 |
 |---|---|
 | **ESP32-S3 板子** | 测试用的是 [Seeed Studio XIAO ESP32S3](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)（普通版，8 MB PSRAM；不是 Sense，也不是 Plus），淘宝搜 "XIAO ESP32S3"，约 40-50 元。USB-C 口接 S3 原生 USB、带 PSRAM 的 ESP32-S3 板子都应该可以。 |

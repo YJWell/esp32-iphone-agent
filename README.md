@@ -55,6 +55,16 @@ iPhone ──Screen Mirroring (Wi-Fi)──▶ ESP32-S3: AirPlay receiver ──
 
 ## Hardware
 
+### Optional computer-controlled C3 / S3 mode
+
+This personal fork also supports **computer -> USB serial -> ESP32-C3 or ESP32-S3 -> Bluetooth HID -> iPhone**.
+Both boards run one shared firmware and accept the same mouse/keyboard commands. It needs neither Wi-Fi nor PSRAM.
+See [serial/BLE setup and protocol](hardware/serial_ble/README.md) for builds, pairing, the Windows JSON CLI,
+and opting the existing Python `Phone`/agent into this transport.
+
+This is **not** the phone-only mode described below: `hardware/hid_bridge` and `ios/` remain unchanged.
+Windows currently has input-only CLI support; a working screen-capture/agent loop is not provided.
+
 | Part | Notes |
 |---|---|
 | **ESP32-S3 board** | Tested with a [Seeed Studio XIAO ESP32S3](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/) (plain version, 8 MB PSRAM; not Sense, not Plus). About $7. Any ESP32-S3 with native USB on its USB-C port and PSRAM should work. |

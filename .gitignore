@@ -22,3 +22,7 @@ hardware/hid_bridge/build/
 hardware/tests/test
 hardware/tests/test.dSYM/
 hardware/tools/out/
+hardware/serial_ble/.pio/
+hardware/serial_ble/tests/test_protocol.exe
+hardware/serial_ble/tests/test_protocol.pdb
+hardware/serial_ble/tests/test_protocol

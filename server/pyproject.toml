@@ -12,6 +12,10 @@ dependencies = ["fastapi>=0.110", "uvicorn>=0.29", "httpx>=0.27", "pillow>=10"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
+serial = ["pyserial==3.5"]
+
+[project.scripts]
+hidagent-serial = "hidagent.serial_bridge:main"
 
 [project.urls]
 Homepage = "https://github.com/onehumanbeing/esp32-iphone-agent"

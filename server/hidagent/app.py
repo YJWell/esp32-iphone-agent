@@ -21,7 +21,14 @@ DATA_DIR = Path(os.environ.get("HIDAGENT_DATA", Path.home() / ".hidagent"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DEBUG = os.environ.get("HIDAGENT_DEBUG") == "1"
 
-device = Device()
+transport = os.environ.get("HIDAGENT_TRANSPORT", "tcp")
+if transport == "serial":
+    from .serial_bridge import SerialDevice
+    device = SerialDevice(os.environ["HIDAGENT_SERIAL_PORT"])
+elif transport == "tcp":
+    device = Device()
+else:
+    raise ValueError("HIDAGENT_TRANSPORT must be tcp or serial")
 screen = Screen(os.environ.get("AIRPLAY_NAME", "iPhone Agent"))
 phone = Phone(device, DATA_DIR / "calibration.json", screen)
 agent = Agent(phone, screen, LLM.from_env("ACTOR"), LLM.from_env("PLANNER"),
@@ -30,13 +37,35 @@ agent = Agent(phone, screen, LLM.from_env("ACTOR"), LLM.from_env("PLANNER"),
 
 @asynccontextmanager
 async def lifespan(_):
-    server = await device.serve("0.0.0.0", int(os.environ.get("DEVICE_PORT", 7300)))
-    screen.start()
-    awake = asyncio.create_task(device.keep_awake(screen=screen))
-    yield
-    awake.cancel()
-    screen.stop()
-    server.close()
+    if transport == "serial" and os.name == "nt":
+        raise RuntimeError("Windows supports the serial JSON CLI only; the server needs a POSIX UxPlay receiver")
+    server = None
+    awake = None
+    try:
+        if transport == "tcp":
+            server = await device.serve("0.0.0.0", int(os.environ.get("DEVICE_PORT", 7300)))
+        else:
+            await device.send("ping")
+        screen.start()
+        awake = asyncio.create_task(device.keep_awake(screen=screen))
+        yield
+    finally:
+        try:
+            if awake is not None:
+                awake.cancel()
+                try:
+                    await awake
+                except asyncio.CancelledError:
+                    pass
+        finally:
+            try:
+                screen.stop()
+            finally:
+                if server is not None:
+                    server.close()
+                    await server.wait_closed()
+                if transport == "serial":
+                    await device.close()
 
 
 app = FastAPI(lifespan=lifespan)

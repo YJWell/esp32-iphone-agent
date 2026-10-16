@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/serial-ble-c3-s3]
   pull_request:
 
 jobs:
@@ -34,7 +34,42 @@ jobs:
       - name: Host tests (bplist, GOP buffer)
         run: make -C hardware/tests
 
-  server:  # legacy v0.1.0 architecture, kept working
+  serial-ble:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board: [esp32c3, esp32s3]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install platformio==6.1.18
+      - name: Shared parser and state-machine behavior
+        run: |
+          g++ -std=c++11 -Wall -Wextra -Werror -pedantic hardware/serial_ble/tests/test_protocol.cpp -o /tmp/test-serial-ble
+          /tmp/test-serial-ble
+      - name: Compile only (never flash)
+        run: python -m platformio run --project-dir hardware/serial_ble -e ${{ matrix.board }}
+
+  dependency-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install uv==0.12.24
+      - name: Regenerate public-index lock
+        run: uv lock --project server --default-index https://pypi.org/simple
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-dependency-lock
+          path: server/uv.lock
+      - name: Check committed lock is current
+        run: git diff --exit-code -- server/uv.lock
+
+  server:  # legacy TCP default plus opt-in serial transport
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -47,6 +82,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,serial]"
       - run: ruff check .
       - run: pytest -q
